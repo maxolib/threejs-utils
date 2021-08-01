@@ -13,20 +13,25 @@ export default class ThreeHandler {
     camera: THREE.Camera;
     scene: THREE.Scene;
     orbitControls?: OrbitControls;
+
     // Common
     params: SceneObjectParams
     sizes: ScreenSize;
+
     // Debuging
     stats: Stats | null;
     gui: dat.GUI | null;
+
     // Event handler
     emitter: events.EventEmitter;
+
     // Animation & Tick
     private clock: THREE.Clock;
     private prevElapsedTime: number;
     private elapsedTime: number;
     private deltaTime: number;
     gsap: GSAP;
+
     // Post-Processing
     effectComposer: EffectComposer | null;
 
@@ -44,7 +49,7 @@ export default class ThreeHandler {
         this.effectComposer = params.enableEffectComposer && this.renderer instanceof THREE.WebGLRenderer ? new EffectComposer(this.renderer) : null
         this.effectComposer?.setPixelRatio(Math.min(window.devicePixelRatio, 2))
         this.effectComposer?.setSize(this.sizes.width, this.sizes.height)
-        if(params.enableFullscreen && params.sizes == undefined)
+        if (params.enableFullscreen && params.sizes == undefined)
             this.setFullScreen(params.enableResponsive)
 
         this.clock = new THREE.Clock()
@@ -54,7 +59,7 @@ export default class ThreeHandler {
 
         this.stats = params.enableStats ? new Stats() : null
         this.gui = params.enableGUI ? new dat.GUI() : null
-        
+
         // gsap.ticker.add(this.tick)
         this.gsap = gsap
 
@@ -64,7 +69,7 @@ export default class ThreeHandler {
         this.tick()
     }
     private init() {
-        
+
         // Stats
         if (this.stats) {
             this.stats.showPanel(0)
@@ -77,43 +82,49 @@ export default class ThreeHandler {
             this.onAwakeTick(() => { this.stats?.begin() })
         }
 
-        if (this.orbitControls){
+        if (this.orbitControls) {
             this.onStartTick(() => { this.orbitControls?.update() })
             this.orbitControls.enableDamping = true;
         }
     }
 
-    private setFullScreen(responsive: boolean | undefined){
-        
+    private setFullScreen(responsive: boolean | undefined) {
+
         this.sizes.width = window.innerWidth
         this.sizes.height = window.innerHeight
 
-        if(!responsive) return
+        if (!responsive) return
 
         window.addEventListener('resize', () => {
-            // Update sizes
-            this.sizes.width = window.innerWidth
-            this.sizes.height = window.innerHeight
-
-            // Update camera
-            if(this.camera instanceof THREE.PerspectiveCamera){
-                this.camera.aspect = this.sizes.width / this.sizes.height
-                this.camera.updateProjectionMatrix()
-            }
-
-            // Update renderer
-            this.renderer?.setSize(this.sizes.width, this.sizes.height)
-            if(this.renderer instanceof THREE.WebGLRenderer)
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+            this.updateSize({ width: window.innerWidth, height: window.innerHeight })
         })
     }
 
+    public updateSize(sizes?: ScreenSize) {
+        // Update sizes
+        if(sizes){
+            this.sizes.width = sizes.width
+            this.sizes.height = sizes.height
+        }
+
+        // Update camera
+        if (this.camera instanceof THREE.PerspectiveCamera) {
+            this.camera.aspect = this.sizes.width / this.sizes.height
+            this.camera.updateProjectionMatrix()
+        }
+
+        // Update renderer
+        this.renderer?.setSize(this.sizes.width, this.sizes.height)
+        if (this.renderer instanceof THREE.WebGLRenderer)
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    }
+
     private tick() {
-        
-        if(this.emitter){
+
+        if (this.emitter) {
             // Awake tick
             this.emitter.emit('awakeTick')
-            
+
             this.elapsedTime = this.clock.getElapsedTime()
             this.deltaTime = this.elapsedTime - this.prevElapsedTime
             this.prevElapsedTime = this.elapsedTime
@@ -125,11 +136,11 @@ export default class ThreeHandler {
             this.emitter.emit('startTick', elapsedTime, deltaTime)
 
             this.renderer.render(this.scene, this.camera)
-            
+
             this.effectComposer?.render()
 
-            window.requestAnimationFrame(() => {this.tick()})
-            
+            window.requestAnimationFrame(() => { this.tick() })
+
             // End tick
             this.emitter.emit('endTick', elapsedTime, deltaTime)
         }

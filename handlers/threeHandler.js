@@ -22,15 +22,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const THREE = __importStar(require("three"));
-const events_1 = __importDefault(require("events"));
-const stats_js_1 = __importDefault(require("stats.js"));
-const dat = __importStar(require("dat.gui"));
-const OrbitControls_1 = require("three/examples/jsm/controls/OrbitControls");
-const EffectComposer_1 = require("three/examples/jsm/postprocessing/EffectComposer");
-const gsap_1 = __importDefault(require("gsap"));
-class ThreeHandler {
-    constructor(params) {
+var THREE = __importStar(require("three"));
+var events_1 = __importDefault(require("events"));
+var stats_js_1 = __importDefault(require("stats.js"));
+var dat = __importStar(require("dat.gui"));
+var OrbitControls_1 = require("three/examples/jsm/controls/OrbitControls");
+var EffectComposer_1 = require("three/examples/jsm/postprocessing/EffectComposer");
+var gsap_1 = __importDefault(require("gsap"));
+var ThreeHandler = /** @class */ (function () {
+    function ThreeHandler(params) {
         var _a, _b, _c, _d, _e, _f;
         this.emitter = new events_1.default.EventEmitter();
         this.canvas = params.canvas;
@@ -59,7 +59,8 @@ class ThreeHandler {
         this.init();
         this.tick();
     }
-    init() {
+    ThreeHandler.prototype.init = function () {
+        var _this = this;
         // Stats
         if (this.stats) {
             this.stats.showPanel(0);
@@ -67,36 +68,43 @@ class ThreeHandler {
         }
         // Update in tick
         if (this.stats) {
-            this.onEndTick(() => { var _a; (_a = this.stats) === null || _a === void 0 ? void 0 : _a.end(); });
-            this.onAwakeTick(() => { var _a; (_a = this.stats) === null || _a === void 0 ? void 0 : _a.begin(); });
+            this.onEndTick(function () { var _a; (_a = _this.stats) === null || _a === void 0 ? void 0 : _a.end(); });
+            this.onAwakeTick(function () { var _a; (_a = _this.stats) === null || _a === void 0 ? void 0 : _a.begin(); });
         }
         if (this.orbitControls) {
-            this.onStartTick(() => { var _a; (_a = this.orbitControls) === null || _a === void 0 ? void 0 : _a.update(); });
+            this.onStartTick(function () { var _a; (_a = _this.orbitControls) === null || _a === void 0 ? void 0 : _a.update(); });
             this.orbitControls.enableDamping = true;
         }
-    }
-    setFullScreen(responsive) {
+    };
+    ThreeHandler.prototype.setFullScreen = function (responsive) {
+        var _this = this;
         this.sizes.width = window.innerWidth;
         this.sizes.height = window.innerHeight;
         if (!responsive)
             return;
-        window.addEventListener('resize', () => {
-            var _a;
-            // Update sizes
-            this.sizes.width = window.innerWidth;
-            this.sizes.height = window.innerHeight;
-            // Update camera
-            if (this.camera instanceof THREE.PerspectiveCamera) {
-                this.camera.aspect = this.sizes.width / this.sizes.height;
-                this.camera.updateProjectionMatrix();
-            }
-            // Update renderer
-            (_a = this.renderer) === null || _a === void 0 ? void 0 : _a.setSize(this.sizes.width, this.sizes.height);
-            if (this.renderer instanceof THREE.WebGLRenderer)
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        window.addEventListener('resize', function () {
+            _this.updateSize({ width: window.innerWidth, height: window.innerHeight });
         });
-    }
-    tick() {
+    };
+    ThreeHandler.prototype.updateSize = function (sizes) {
+        var _a;
+        // Update sizes
+        if (sizes) {
+            this.sizes.width = sizes.width;
+            this.sizes.height = sizes.height;
+        }
+        // Update camera
+        if (this.camera instanceof THREE.PerspectiveCamera) {
+            this.camera.aspect = this.sizes.width / this.sizes.height;
+            this.camera.updateProjectionMatrix();
+        }
+        // Update renderer
+        (_a = this.renderer) === null || _a === void 0 ? void 0 : _a.setSize(this.sizes.width, this.sizes.height);
+        if (this.renderer instanceof THREE.WebGLRenderer)
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    };
+    ThreeHandler.prototype.tick = function () {
+        var _this = this;
         var _a;
         if (this.emitter) {
             // Awake tick
@@ -104,26 +112,27 @@ class ThreeHandler {
             this.elapsedTime = this.clock.getElapsedTime();
             this.deltaTime = this.elapsedTime - this.prevElapsedTime;
             this.prevElapsedTime = this.elapsedTime;
-            const elapsedTime = this.elapsedTime;
-            const deltaTime = this.deltaTime;
+            var elapsedTime = this.elapsedTime;
+            var deltaTime = this.deltaTime;
             // Start tick
             this.emitter.emit('startTick', elapsedTime, deltaTime);
             this.renderer.render(this.scene, this.camera);
             (_a = this.effectComposer) === null || _a === void 0 ? void 0 : _a.render();
-            window.requestAnimationFrame(() => { this.tick(); });
+            window.requestAnimationFrame(function () { _this.tick(); });
             // End tick
             this.emitter.emit('endTick', elapsedTime, deltaTime);
         }
-    }
-    onAwakeTick(action) {
+    };
+    ThreeHandler.prototype.onAwakeTick = function (action) {
         this.emitter.on('awakeTick', action);
-    }
+    };
     // ...args:any[]
-    onStartTick(action) {
+    ThreeHandler.prototype.onStartTick = function (action) {
         this.emitter.on('startTick', action);
-    }
-    onEndTick(action) {
+    };
+    ThreeHandler.prototype.onEndTick = function (action) {
         this.emitter.on('endTick', action);
-    }
-}
+    };
+    return ThreeHandler;
+}());
 exports.default = ThreeHandler;
