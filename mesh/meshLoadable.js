@@ -8,7 +8,10 @@ const loadingHandler_1 = __importDefault(require("../handlers/loadingHandler"));
 class MeshLoadable extends three_1.Mesh {
     constructor(geometry, material) {
         super(geometry, material);
-        this.loadingManager = new loadingHandler_1.default();
+        this.loadingHandler = new loadingHandler_1.default();
+    }
+    get loadingManager() {
+        return this.loadingHandler.manager;
     }
 }
 exports.default = MeshLoadable;

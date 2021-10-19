@@ -3,9 +3,14 @@ import { Mesh } from "three";
 import LoadingHandler from "../handlers/loadingHandler";
 
 export default class MeshLoadable extends Mesh{
-    loadingManager: LoadingHandler
+    loadingHandler: LoadingHandler
+    
+    public get loadingManager(): THREE.LoadingManager{
+        return this.loadingHandler.manager
+    }
+
     constructor(geometry?: THREE.BufferGeometry | undefined, material?: THREE.Material | THREE.Material[] | undefined){
         super(geometry, material)
-        this.loadingManager = new LoadingHandler()
+        this.loadingHandler = new LoadingHandler()
     }
 }
