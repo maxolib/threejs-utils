@@ -9,8 +9,12 @@ export default class MeshLoadable extends Mesh{
         return this.loadingHandler.manager
     }
 
-    constructor(geometry?: THREE.BufferGeometry | undefined, material?: THREE.Material | THREE.Material[] | undefined){
+    constructor(
+            geometry?: THREE.BufferGeometry | undefined, 
+            material?: THREE.Material | THREE.Material[] | undefined,
+            loadingHandler?: LoadingHandler | undefined,
+        ){
         super(geometry, material)
-        this.loadingHandler = new LoadingHandler()
+        this.loadingHandler =  loadingHandler ?? new LoadingHandler()
     }
 }

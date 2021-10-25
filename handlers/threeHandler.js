@@ -130,5 +130,9 @@ class ThreeHandler {
     onEndTick(action) {
         this.emitter.on('endTick', action);
     }
+    setOrbitTarget(point) {
+        if (this.orbitControls)
+            this.orbitControls.target = point;
+    }
 }
 exports.default = ThreeHandler;

@@ -156,6 +156,11 @@ export default class ThreeHandler {
     onEndTick(action: (elaped: number, delta: number) => void) {
         this.emitter.on('endTick', action)
     }
+
+    setOrbitTarget(point: THREE.Vector3){
+        if(this.orbitControls)
+            this.orbitControls.target = point;
+    }
 }
 
 interface SceneObjectParams {
