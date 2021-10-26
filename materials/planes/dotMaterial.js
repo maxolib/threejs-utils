@@ -27,17 +27,17 @@ const vertex_glsl_1 = __importDefault(require("./vertex.glsl"));
 const fragment_glsl_1 = __importDefault(require("./fragment.glsl"));
 class DotMaterial extends THREE.MeshBasicMaterial {
     constructor(params) {
-        var _a, _b;
         super(params);
-        this.uniforms = {};
-        this.uniforms.segments = { value: (_a = params === null || params === void 0 ? void 0 : params.segments) !== null && _a !== void 0 ? _a : 10 };
-        this.uniforms.padding = { value: (_b = params === null || params === void 0 ? void 0 : params.padding) !== null && _b !== void 0 ? _b : .4 };
-        this.uniforms.mainColor = { value: (params === null || params === void 0 ? void 0 : params.mainColor) ? new THREE.Color(params.mainColor) : new THREE.Color(0xffffff) };
-        this.uniforms.secondColor = { value: (params === null || params === void 0 ? void 0 : params.secondColor) ? new THREE.Color(params.secondColor) : new THREE.Color(0x000000) };
         this.onBeforeCompile = shader => {
+            var _a, _b;
+            shader.uniforms.segments = { value: (_a = params === null || params === void 0 ? void 0 : params.segments) !== null && _a !== void 0 ? _a : 10 };
+            shader.uniforms.padding = { value: (_b = params === null || params === void 0 ? void 0 : params.padding) !== null && _b !== void 0 ? _b : .4 };
+            shader.uniforms.mainColor = { value: (params === null || params === void 0 ? void 0 : params.mainColor) ? new THREE.Color(params.mainColor) : new THREE.Color(0xffffff) };
+            shader.uniforms.secondColor = { value: (params === null || params === void 0 ? void 0 : params.secondColor) ? new THREE.Color(params.secondColor) : new THREE.Color(0x000000) };
             shader.vertexShader = vertex_glsl_1.default;
             shader.fragmentShader = fragment_glsl_1.default;
         };
+        // this.setValues(params as THREE.ShaderMaterialParameters)
     }
 }
 exports.default = DotMaterial;

@@ -1,3 +1,7 @@
+
+// void main() {
+	
+// }
 uniform vec3 diffuse;
 uniform float opacity;
 #ifndef FLAT_SHADED
@@ -20,11 +24,13 @@ uniform float opacity;
 #include <logdepthbuf_pars_fragment>
 #include <clipping_planes_pars_fragment>
 
+// MODIFY -----------------------------------------------------------
 varying vec2 vUv;
 varying float vSegments;
 varying float vPadding;
 varying vec3 vMainColor;
 varying vec3 vSecondColor;
+// ------------------------------------------------------------------
 
 void main() {
 	#include <clipping_planes_fragment>
@@ -47,14 +53,17 @@ void main() {
 	reflectedLight.indirectDiffuse *= diffuseColor.rgb;
 	vec3 outgoingLight = reflectedLight.indirectDiffuse;
 	#include <envmap_fragment>
-	
+	gl_FragColor = vec4( outgoingLight, diffuseColor.a );
+
+	// MODIFY -----------------------------------------------------------
 	vec2 uv = vec2(vUv);
 	uv.y = mod(uv.y * vSegments, 1.);
 	uv.x = mod(uv.x * vSegments, 1.);
 	float strength = step(vPadding, distance(uv, vec2(0.5, 0.5)));
 	vec3 mixedColor = mix(vMainColor, vSecondColor, strength);
-	// gl_FragColor = vec4( mixedColor, diffuseColor.a);
-	gl_FragColor = vec4( outgoingLight, diffuseColor.a );
+	gl_FragColor = vec4( mixedColor, diffuseColor.a);
+	// ------------------------------------------------------------------
+
 	#include <tonemapping_fragment>
 	#include <encodings_fragment>
 	#include <fog_fragment>

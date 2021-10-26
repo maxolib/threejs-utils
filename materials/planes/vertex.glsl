@@ -1,4 +1,3 @@
-
 #include <common>
 #include <uv_pars_vertex>
 #include <uv2_pars_vertex>
@@ -10,6 +9,8 @@
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
 
+
+// MODIFY -----------------------------------------------------------
 uniform float segments;
 uniform float padding;
 uniform vec3 mainColor;
@@ -19,6 +20,7 @@ varying float vSegments;
 varying float vPadding;
 varying vec3 vMainColor;
 varying vec3 vSecondColor;
+// ------------------------------------------------------------------
 
 void main() {
 	#include <uv_vertex>
@@ -41,10 +43,11 @@ void main() {
 	#include <envmap_vertex>
 	#include <fog_vertex>
 
-	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+	// MODIFY -----------------------------------------------------------
 	vUv = uv;
 	vSegments = segments;
 	vPadding = padding;
 	vMainColor = mainColor;
 	vSecondColor = secondColor;
+	// ------------------------------------------------------------------
 }
