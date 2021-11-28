@@ -1,10 +1,8 @@
 import * as THREE from 'three'
 import events from 'events'
-import Stats from 'stats.js'
-import * as dat from 'dat.gui'
+import DatGui from 'react-dat-gui'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
-import gsap from "gsap"
 
 export default class ThreeHandler {
     // Graphics
@@ -19,8 +17,6 @@ export default class ThreeHandler {
     sizes: ScreenSize;
 
     // Debuging
-    stats: Stats | null;
-    gui: dat.GUI | null;
 
     // Event handler
     emitter: events.EventEmitter;
@@ -30,7 +26,6 @@ export default class ThreeHandler {
     private prevElapsedTime: number;
     private elapsedTime: number;
     private deltaTime: number;
-    gsap: GSAP;
 
     // Post-Processing
     effectComposer: EffectComposer | null;
@@ -57,11 +52,7 @@ export default class ThreeHandler {
         this.elapsedTime = 0
         this.deltaTime = 0
 
-        this.stats = params.enableStats ? new Stats() : null
-        this.gui = params.enableGUI ? new dat.GUI() : null
-
         // gsap.ticker.add(this.tick)
-        this.gsap = gsap
 
         this.params = params
         this.init()
@@ -69,19 +60,6 @@ export default class ThreeHandler {
         this.tick()
     }
     private init() {
-
-        // Stats
-        if (this.stats) {
-            this.stats.showPanel(0)
-            document.body.appendChild(this.stats.dom)
-        }
-
-        // Update in tick
-        if (this.stats) {
-            this.onEndTick(() => { this.stats?.end() })
-            this.onAwakeTick(() => { this.stats?.begin() })
-        }
-
         if (this.orbitControls) {
             this.onStartTick(() => { this.orbitControls?.update() })
             this.orbitControls.enableDamping = true;
