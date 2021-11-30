@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import events from 'events'
-import DatGui from 'react-dat-gui'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
+import {gsap} from "gsap"
 
 export default class ThreeHandler {
     // Graphics
@@ -15,6 +15,7 @@ export default class ThreeHandler {
     // Common
     params: SceneObjectParams
     sizes: ScreenSize;
+    gsap: GSAP
 
     // Debuging
 
@@ -44,6 +45,7 @@ export default class ThreeHandler {
         this.effectComposer = params.enableEffectComposer && this.renderer instanceof THREE.WebGLRenderer ? new EffectComposer(this.renderer) : null
         this.effectComposer?.setPixelRatio(Math.min(window.devicePixelRatio, 2))
         this.effectComposer?.setSize(this.sizes.width, this.sizes.height)
+        this.gsap = gsap
         if (params.enableFullscreen && params.sizes == undefined)
             this.setFullScreen(params.enableResponsive)
 
