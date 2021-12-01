@@ -127,6 +127,21 @@ export default class ThreeHandler {
             const elapsedTime = this.elapsedTime
             const deltaTime = this.deltaTime
 
+            // Raycast
+            if(this.raycaster){
+                this.raycaster.setFromCamera(this.mouse, this.camera)
+                this.hits = this.raycaster.intersectObjects( this.scene.children );
+                if(this.hits.length > 0){
+                    // TODO:
+                    console.log("raycaster: ", this.hits[0].object.name);
+                    if(this.currentHit != this.hits[0].object){
+                        this.currentHit = this.hits[0].object
+                    }
+                }
+                else{
+                    this.currentHit = undefined
+                }
+            }
 
             // Start tick
             this.emitter.emit('startTick', elapsedTime, deltaTime)
@@ -137,17 +152,6 @@ export default class ThreeHandler {
 
             window.requestAnimationFrame(() => { this.tick() })
 
-            // Raycast
-            if(this.raycaster){
-                this.raycaster.setFromCamera(this.mouse, this.camera)
-                this.hits = this.raycaster.intersectObjects( this.scene.children );
-                if(this.hits.length > 0){
-                    this.currentHit = this.hits[0].object
-                }
-                else{
-                    this.currentHit = undefined
-                }
-            }
 
             // End tick
             this.emitter.emit('endTick', elapsedTime, deltaTime)
