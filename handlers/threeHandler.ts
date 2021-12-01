@@ -3,19 +3,24 @@ import events from 'events'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
 import {gsap} from "gsap"
+import { Vector2 } from 'three'
 
 export default class ThreeHandler {
     // Graphics
-    canvas: HTMLCanvasElement;
-    renderer: THREE.Renderer;
-    camera: THREE.Camera;
-    scene: THREE.Scene;
-    orbitControls?: OrbitControls;
+    canvas: HTMLCanvasElement
+    renderer: THREE.Renderer
+    camera: THREE.Camera
+    scene: THREE.Scene
+    orbitControls?: OrbitControls
 
     // Common
     params: SceneObjectParams
-    sizes: ScreenSize;
+    sizes: ScreenSize
+    mouse: THREE.Vector2
     gsap: GSAP
+    raycaster?: THREE.Raycaster
+    hits: THREE.Intersection<THREE.Object3D<THREE.Event>>[]
+    currentHit?: THREE.Object3D
 
     // Debuging
 
@@ -40,14 +45,20 @@ export default class ThreeHandler {
             antialias: params.antialias
         })
         this.sizes = params.sizes ?? { width: window.innerWidth, height: window.innerHeight }
+        this.mouse = new Vector2()
         this.camera = params.camera ?? new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height, 0.1, 100)
         this.orbitControls = params.enableOrbitControls ? new OrbitControls(this.camera, this.canvas as HTMLElement) : undefined
         this.effectComposer = params.enableEffectComposer && this.renderer instanceof THREE.WebGLRenderer ? new EffectComposer(this.renderer) : null
         this.effectComposer?.setPixelRatio(Math.min(window.devicePixelRatio, 2))
         this.effectComposer?.setSize(this.sizes.width, this.sizes.height)
         this.gsap = gsap
+        if(params.enableRaycaster)
+            this.raycaster = new THREE.Raycaster()
+        this.hits = []
         if (params.enableFullscreen && params.sizes == undefined)
             this.setFullScreen(params.enableResponsive)
+
+        this.setMouse()
 
         this.clock = new THREE.Clock()
         this.prevElapsedTime = 0
@@ -77,6 +88,11 @@ export default class ThreeHandler {
 
         window.addEventListener('resize', () => {
             this.updateSize({ width: window.innerWidth, height: window.innerHeight })
+        })
+    }
+    private setMouse() {
+        window.addEventListener('mousemove', e => {
+            this.mouse.set(e.clientX, e.clientY)
         })
     }
 
@@ -121,6 +137,18 @@ export default class ThreeHandler {
 
             window.requestAnimationFrame(() => { this.tick() })
 
+            // Raycast
+            if(this.raycaster){
+                this.raycaster.setFromCamera(this.mouse, this.camera)
+                this.hits = this.raycaster.intersectObjects( this.scene.children );
+                if(this.hits.length > 0){
+                    this.currentHit = this.hits[0].object
+                }
+                else{
+                    this.currentHit = undefined
+                }
+            }
+
             // End tick
             this.emitter.emit('endTick', elapsedTime, deltaTime)
         }
@@ -129,10 +157,12 @@ export default class ThreeHandler {
     onAwakeTick(action: () => void) {
         this.emitter.on('awakeTick', action)
     }
+
     // ...args:any[]
     onStartTick(action: (elaped: number, delta: number) => void) {
         this.emitter.on('startTick', action)
     }
+    
     onEndTick(action: (elaped: number, delta: number) => void) {
         this.emitter.on('endTick', action)
     }
@@ -156,6 +186,7 @@ interface SceneObjectParams {
     enableEffectComposer?: boolean
     enableFullscreen?: boolean
     enableResponsive?: boolean
+    enableRaycaster?: boolean
 }
 
 interface Size {
