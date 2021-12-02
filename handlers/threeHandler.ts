@@ -3,6 +3,7 @@ import events from 'events'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
 import {gsap} from "gsap"
+import { Vector2 } from 'three'
 
 enum HandlerEvent{
     AwakeTick = "AwakeTick",
@@ -97,9 +98,10 @@ export default class ThreeHandler {
             this.updateSize({ width: window.innerWidth, height: window.innerHeight })
         })
     }
+
     private setMouse() {
         window.addEventListener('mousemove', e => {
-            this.mouse.set(e.clientX, e.clientY)
+            this.mouse.set((e.clientX / this.sizes.width) * 2 - 1, 1 - (e.clientY / this.sizes.height) * 2)
         })
     }
 
@@ -136,14 +138,18 @@ export default class ThreeHandler {
 
             // Raycast
             if(this.raycaster){
+                // const coordinate = this.mouse.clone()
                 this.raycaster.setFromCamera(this.mouse, this.camera)
+                
                 this.hits = this.raycaster.intersectObjects( this.scene.children );
                 if(this.hits.length > 0){
                     if(this.currentHit != this.hits[0].object){
                         this.emitter.emit(HandlerEvent.LeaveObject, this.currentHit)
                         this.currentHit = this.hits[0].object
+                        
                         this.emitter.emit(HandlerEvent.EnterObject, this.currentHit)
                     }
+                    console.log(this.currentHit?.name);
                 }
                 else if(this.currentHit){
                     this.emitter.emit(HandlerEvent.LeaveObject, this.currentHit)
@@ -173,6 +179,10 @@ export default class ThreeHandler {
     // ...args:any[]
     onStartTick(action: (elaped: number, delta: number) => void) {
         this.emitter.on(HandlerEvent.StareTick, action)
+    }
+
+    removeStartTick(action: (elaped: number, delta: number) => void) {
+        this.emitter.removeListener(HandlerEvent.StareTick, action)
     }
     
     onEndTick(action: (elaped: number, delta: number) => void) {
