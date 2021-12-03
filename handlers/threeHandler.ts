@@ -1,19 +1,12 @@
 import * as THREE from 'three'
-import events from 'events'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
 import {gsap} from "gsap"
-import { Vector2 } from 'three'
+import EventHandler, { EventInvoke, EventParams } from './eventHandler'
+import Dispose from '../types/dispose'
+import { Mesh } from 'three'
 
-enum HandlerEvent{
-    AwakeTick = "AwakeTick",
-    StareTick = "StareTick",
-    EndTick = "EndTick",
-    EnterObject = "EnterObject",
-    LeaveObject = "LeaveObject",
-}
-
-export default class ThreeHandler {
+export default class ThreeHandler extends Dispose {
     // Graphics
     canvas: HTMLCanvasElement
     renderer: THREE.Renderer
@@ -26,14 +19,11 @@ export default class ThreeHandler {
     sizes: ScreenSize
     mouse: THREE.Vector2
     gsap: GSAP
-    raycaster?: THREE.Raycaster
-    hits: THREE.Intersection<THREE.Object3D<THREE.Event>>[]
-    currentHit?: THREE.Object3D
 
     // Debuging
 
     // Event handler
-    emitter: events.EventEmitter;
+    eventHandler: EventHandler
 
     // Animation & Tick
     private clock: THREE.Clock;
@@ -45,7 +35,8 @@ export default class ThreeHandler {
     effectComposer: EffectComposer | null;
 
     constructor(params: SceneObjectParams) {
-        this.emitter = new events.EventEmitter()
+        super()
+        this.eventHandler = new EventHandler(this)
         this.canvas = params.canvas;
         this.scene = params.scene ?? new THREE.Scene()
         this.renderer = params.renderer ?? new THREE.WebGLRenderer({
@@ -60,13 +51,9 @@ export default class ThreeHandler {
         this.effectComposer?.setPixelRatio(Math.min(window.devicePixelRatio, 2))
         this.effectComposer?.setSize(this.sizes.width, this.sizes.height)
         this.gsap = gsap
-        if(params.enableRaycaster)
-            this.raycaster = new THREE.Raycaster()
-        this.hits = []
+
         if (params.enableFullscreen && params.sizes == undefined)
             this.setFullScreen(params.enableResponsive)
-
-        this.setMouse()
 
         this.clock = new THREE.Clock()
         this.prevElapsedTime = 0
@@ -79,10 +66,16 @@ export default class ThreeHandler {
         this.init()
 
         this.tick()
+
+        this.onDispose(() => {
+            this.eventHandler.dispose()
+        })
     }
+
     private init() {
+        const tick = () => { this.orbitControls?.update() }
         if (this.orbitControls) {
-            this.onStartTick(() => { this.orbitControls?.update() })
+            this.subscribe("startTick", tick)
             this.orbitControls.enableDamping = true;
         }
     }
@@ -96,12 +89,6 @@ export default class ThreeHandler {
 
         window.addEventListener('resize', () => {
             this.updateSize({ width: window.innerWidth, height: window.innerHeight })
-        })
-    }
-
-    private setMouse() {
-        window.addEventListener('mousemove', e => {
-            this.mouse.set((e.clientX / this.sizes.width) * 2 - 1, 1 - (e.clientY / this.sizes.height) * 2)
         })
     }
 
@@ -125,76 +112,27 @@ export default class ThreeHandler {
     }
 
     private tick() {
+        // Awake
+        this.invoke('awakeTick')
 
-        if (this.emitter) {
-            // Awake tick
-            this.emitter.emit(HandlerEvent.AwakeTick)
-
-            this.elapsedTime = this.clock.getElapsedTime()
-            this.deltaTime = this.elapsedTime - this.prevElapsedTime
-            this.prevElapsedTime = this.elapsedTime
-            const elapsedTime = this.elapsedTime
-            const deltaTime = this.deltaTime
-
-            // Raycast
-            if(this.raycaster){
-                // const coordinate = this.mouse.clone()
-                this.raycaster.setFromCamera(this.mouse, this.camera)
-                
-                this.hits = this.raycaster.intersectObjects( this.scene.children );
-                if(this.hits.length > 0){
-                    if(this.currentHit != this.hits[0].object){
-                        this.emitter.emit(HandlerEvent.LeaveObject, this.currentHit)
-                        this.currentHit = this.hits[0].object
-                        
-                        this.emitter.emit(HandlerEvent.EnterObject, this.currentHit)
-                    }
-                    console.log(this.currentHit?.name);
-                }
-                else if(this.currentHit){
-                    this.emitter.emit(HandlerEvent.LeaveObject, this.currentHit)
-                    this.currentHit = undefined
-                }
-            }
-
-            // Start tick
-            this.emitter.emit(HandlerEvent.StareTick, elapsedTime, deltaTime)
-
-            this.renderer.render(this.scene, this.camera)
-
-            this.effectComposer?.render()
-
-            window.requestAnimationFrame(() => { this.tick() })
+        this.elapsedTime = this.clock.getElapsedTime()
+        this.deltaTime = this.elapsedTime - this.prevElapsedTime
+        this.prevElapsedTime = this.elapsedTime
+        const elapsedTime = this.elapsedTime
+        const deltaTime = this.deltaTime
 
 
-            // End tick
-            this.emitter.emit(HandlerEvent.EndTick, elapsedTime, deltaTime)
-        }
-    }
+        // Start tick
+        this.invoke('startTick', elapsedTime, deltaTime)
 
-    onAwakeTick(action: () => void) {
-        this.emitter.on(HandlerEvent.AwakeTick, action)
-    }
+        this.renderer.render(this.scene, this.camera)
 
-    // ...args:any[]
-    onStartTick(action: (elaped: number, delta: number) => void) {
-        this.emitter.on(HandlerEvent.StareTick, action)
-    }
+        this.effectComposer?.render()
 
-    removeStartTick(action: (elaped: number, delta: number) => void) {
-        this.emitter.removeListener(HandlerEvent.StareTick, action)
-    }
-    
-    onEndTick(action: (elaped: number, delta: number) => void) {
-        this.emitter.on(HandlerEvent.EndTick, action)
-    }
+        window.requestAnimationFrame(() => { this.tick() })
 
-    onEnterObject(action: (object: THREE.Object3D) => void) {
-        this.emitter.on(HandlerEvent.EnterObject, action)
-    }
-
-    onLeaveObject(action: (object: THREE.Object3D) => void) {
-        this.emitter.on(HandlerEvent.EndTick, action)
+        // End tick
+        this.invoke('startTick', elapsedTime, deltaTime)
     }
 
     setOrbitTarget(point: THREE.Vector3){
@@ -202,9 +140,21 @@ export default class ThreeHandler {
             this.orbitControls.target = point;
     }
     
-    add(target: THREE.Object3D, parent?: THREE.Scene | THREE.Object3D){
-        
-    }
+	invoke<T extends keyof EventInvoke>(type: T, ...args: EventInvoke[T]){
+		this.eventHandler.emitter.emit(type as string,  ...args)
+	}
+
+	subscribe<T extends keyof EventParams>(type: T, action: EventParams[T]){
+		this.eventHandler.emitter.on(type as string, action)
+
+        this.onDispose(() => {
+		    this.eventHandler.emitter.off(type as string, action)
+        })
+	}
+
+	unsubscribe<T extends keyof EventParams>(type: T, action: EventParams[T]){
+		this.eventHandler.emitter.off(type as string, action)
+	}
 }
 
 interface SceneObjectParams {
