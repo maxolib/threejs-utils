@@ -37,7 +37,7 @@ export type EventParams = {
 export default class EventHandler extends Dispose {
 	handler: ThreeHandler
 	emitter: events.EventEmitter = new events.EventEmitter()
-	coordinate: THREE.Vector2 = new Vector2()
+	coordinate: THREE.Vector2 = new Vector2(Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER)
 
 	raycaster: THREE.Raycaster = new THREE.Raycaster()
 	intersacts: THREE.Intersection<THREE.Object3D<THREE.Event>>[] = []

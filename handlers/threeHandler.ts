@@ -17,7 +17,6 @@ export default class ThreeHandler extends Dispose {
     // Common
     params: SceneObjectParams
     sizes: ScreenSize
-    mouse: THREE.Vector2
     gsap: GSAP
 
     // Debuging
@@ -44,7 +43,6 @@ export default class ThreeHandler extends Dispose {
             antialias: params.antialias
         })
         this.sizes = params.sizes ?? { width: window.innerWidth, height: window.innerHeight }
-        this.mouse = new THREE.Vector2()
         this.camera = params.camera ?? new THREE.PerspectiveCamera(75, this.sizes.width / this.sizes.height, 0.1, 100)
         this.orbitControls = params.enableOrbitControls ? new OrbitControls(this.camera, this.canvas as HTMLElement) : undefined
         this.effectComposer = params.enableEffectComposer && this.renderer instanceof THREE.WebGLRenderer ? new EffectComposer(this.renderer) : null
