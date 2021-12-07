@@ -3,7 +3,6 @@ import * as THREE from 'three'
 import events from 'events'
 import ObjectEvent from "../types/objectEvent"
 import Dispose from "../types/dispose"
-import { Vector2 } from "three"
 
 export interface PointerEvent {
 	coordinate: THREE.Vector2
@@ -37,11 +36,12 @@ export type EventParams = {
 export default class EventHandler extends Dispose {
 	handler: ThreeHandler
 	emitter: events.EventEmitter = new events.EventEmitter()
-	coordinate: THREE.Vector2 = new Vector2(Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER)
+	coordinate: THREE.Vector2 = new THREE.Vector2(Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER)
 
 	raycaster: THREE.Raycaster = new THREE.Raycaster()
 	intersacts: THREE.Intersection<THREE.Object3D<THREE.Event>>[] = []
 	currentHit?: THREE.Object3D
+	candidateClick?: THREE.Object3D
 	targets: ObjectEvent[] = []
 
 	constructor(handler: ThreeHandler) {
@@ -49,6 +49,7 @@ export default class EventHandler extends Dispose {
 		this.handler = handler
 
 		this.setCoordinate()
+		this.setClicked()
 		this.subscribe('awakeTick', () => {
 			if (this.raycaster) {
 				this.raycaster.setFromCamera(this.coordinate, this.handler.camera)
@@ -57,7 +58,7 @@ export default class EventHandler extends Dispose {
 				if (this.intersacts.length > 0) {
 					if (this.currentHit != this.intersacts[0].object) {
 						var target = this.targets.find(x => x.object == this.currentHit)
-						if(target)
+						if (target)
 							target.invoke("onLeave", { coordinate: this.coordinate.clone(), target })
 						this.currentHit = this.intersacts[0].object
 						var target = this.targets.find(x => x.object == this.currentHit)
@@ -99,6 +100,37 @@ export default class EventHandler extends Dispose {
 	private setCoordinate() {
 		window.addEventListener('mousemove', e => {
 			this.coordinate.set((e.clientX / this.handler.sizes.width) * 2 - 1, 1 - (e.clientY / this.handler.sizes.height) * 2)
+		})
+		this.onDispose(() => {
+			window.removeEventListener('mousemove', e => {
+				this.coordinate.set((e.clientX / this.handler.sizes.width) * 2 - 1, 1 - (e.clientY / this.handler.sizes.height) * 2)
+			})
+		})
+	}
+
+	private setClicked() {
+		window.addEventListener('mousedown', e => {
+			this.candidateClick = this.currentHit
+		})
+		window.addEventListener('mouseup', e => {
+			if (this.currentHit && this.currentHit == this.candidateClick) {
+				var target = this.targets.find(x => x.object == this.currentHit)
+				if (target)
+					target.invoke('onClick', { coordinate: this.coordinate.clone(), target })
+			}
+		})
+		this.onDispose(() => {
+
+			window.removeEventListener('mousedown', e => {
+				this.candidateClick = this.currentHit
+			})
+			window.removeEventListener('mouseup', e => {
+				if (this.currentHit && this.currentHit == this.candidateClick) {
+					var target = this.targets.find(x => x.object == this.currentHit)
+					if (target)
+						target.invoke('onClick', { coordinate: this.coordinate.clone(), target })
+				}
+			})
 		})
 	}
 }
