@@ -21,12 +21,12 @@ export type ObjectEventParams = {
     onClickMove: (event: PointerEvent) => void,
     onTouchMove: (event: PointerEvent) => void,
 }
-export default class ObjectEvent extends Dispose {
+export default class ObjectEvent<T extends THREE.Object3D> extends Dispose {
 	handler: ThreeHandler
-	object: THREE.Object3D
+	object: T
     emitter: events.EventEmitter
 
-	constructor(handler: ThreeHandler, object: THREE.Object3D){
+	constructor(handler: ThreeHandler, object: T){
 		super()
 
 		this.handler = handler

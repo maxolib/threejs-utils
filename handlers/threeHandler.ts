@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer'
-import {gsap} from "gsap"
+import { gsap } from "gsap"
 import EventHandler, { EventInvoke, EventParams } from './eventHandler'
 import Dispose from '../types/dispose'
 import { Mesh } from 'three'
@@ -92,7 +92,7 @@ export default class ThreeHandler extends Dispose {
 
     public updateSize(sizes?: ScreenSize) {
         // Update sizes
-        if(sizes){
+        if (sizes) {
             this.sizes.width = sizes.width
             this.sizes.height = sizes.height
         }
@@ -133,26 +133,41 @@ export default class ThreeHandler extends Dispose {
         this.invoke('startTick', elapsedTime, deltaTime)
     }
 
-    setOrbitTarget(point: THREE.Vector3){
-        if(this.orbitControls)
+    setOrbitTarget(point: THREE.Vector3) {
+        if (this.orbitControls) {
             this.orbitControls.target = point;
-    }
-    
-	invoke<T extends keyof EventInvoke>(type: T, ...args: EventInvoke[T]){
-		this.eventHandler.emitter.emit(type as string,  ...args)
-	}
+            // const objectPos = props.objectEvent.object.position.clone()
+            // const center = baseData.rooms.workspace.focusPoint.clone()
+            // const direction = center.clone().sub(objectPos).normalize()
+            // const newPos = center.clone().add(direction.clone().multiplyScalar(0.2))
+            // handler.gsap.killTweensOf(handler.camera.position)
+            // handler.gsap.to(handler.camera.position, {
+            //     x: newPos.x,
+            //     y: newPos.y,
+            //     z: newPos.z,
+            //     duration: 0.5,
+            //     onUpdate: () => {
 
-	subscribe<T extends keyof EventParams>(type: T, action: EventParams[T]){
-		this.eventHandler.emitter.on(type as string, action)
+            //     }
+            // })
+        }
+    }
+
+    invoke<T extends keyof EventInvoke>(type: T, ...args: EventInvoke[T]) {
+        this.eventHandler.emitter.emit(type as string, ...args)
+    }
+
+    subscribe<T extends keyof EventParams>(type: T, action: EventParams[T]) {
+        this.eventHandler.emitter.on(type as string, action)
 
         this.onDispose(() => {
-		    this.eventHandler.emitter.off(type as string, action)
+            this.eventHandler.emitter.off(type as string, action)
         })
-	}
+    }
 
-	unsubscribe<T extends keyof EventParams>(type: T, action: EventParams[T]){
-		this.eventHandler.emitter.off(type as string, action)
-	}
+    unsubscribe<T extends keyof EventParams>(type: T, action: EventParams[T]) {
+        this.eventHandler.emitter.off(type as string, action)
+    }
 }
 
 interface SceneObjectParams {
