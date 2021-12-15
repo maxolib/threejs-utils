@@ -133,23 +133,25 @@ export default class ThreeHandler extends Dispose {
         this.invoke('startTick', elapsedTime, deltaTime)
     }
 
-    setOrbitTarget(point: THREE.Vector3) {
-        if (this.orbitControls) {
-            this.orbitControls.target = point;
-            // const objectPos = props.objectEvent.object.position.clone()
-            // const center = baseData.rooms.workspace.focusPoint.clone()
-            // const direction = center.clone().sub(objectPos).normalize()
-            // const newPos = center.clone().add(direction.clone().multiplyScalar(0.2))
-            // handler.gsap.killTweensOf(handler.camera.position)
-            // handler.gsap.to(handler.camera.position, {
-            //     x: newPos.x,
-            //     y: newPos.y,
-            //     z: newPos.z,
-            //     duration: 0.5,
-            //     onUpdate: () => {
+    setOrbitTarget(focusPoint: THREE.Vector3, cameraPoint: THREE.Vector3, useAnimation: boolean = true) {
+        if (!this.orbitControls) return
 
-            //     }
-            // })
+        if (useAnimation) {
+            this.gsap.to(this.orbitControls.target, {
+                x: focusPoint.x,
+                y: focusPoint.y,
+                z: focusPoint.z,
+                duration: 1,
+            })
+            this.gsap.to(this.camera.position, {
+                x: cameraPoint.x,
+                y: cameraPoint.y,
+                z: cameraPoint.z,
+                duration: 1,
+            })
+        }
+        else {
+            this.orbitControls.target = focusPoint;
         }
     }
 
